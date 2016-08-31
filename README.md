@@ -1,6 +1,7 @@
 # Yii2-Oci8
-An Yii2 connection class which uses [yajra/pdo-via-oci8](https://github.com/yajra/pdo-via-oci8) 
-package for standard PHP OCI8 functions. There are no "super" pdo classes and wrapers, presented only Yii2 related functionality.
+Yii2 extension which uses well written [yajra/pdo-via-oci8](https://github.com/yajra/pdo-via-oci8) 
+for standard PHP Oracle functions (OCI8). There are no "super" pdo classes and wrapers, 
+presented only Yii2 related functionality.
 
 **Supported**
 - Yii 2.x;

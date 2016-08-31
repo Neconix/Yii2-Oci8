@@ -1,6 +1,6 @@
 {
   "name": "neconix/yii2-oci8",
-  "description": "An OCI8 connection class for Yii2 based on pdo-via-oci8 package",
+  "description": "Yii2 extension which uses well written pdo-via-oci8 package for standard PHP Oracle functions (OCI8)",
   "type": "library",
   "keywords": ["yii2", "oracle", "oci8", "database"],
   "license": "MIT",
@@ -23,7 +23,7 @@
 
   "autoload": {
     "psr-4": {
-      "neconix\\yii2oci8\\": "src/"
+      "neconix\\yii2-oci8\\": "src/"
     }
   }
 
