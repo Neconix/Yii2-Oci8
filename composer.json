@@ -1,0 +1,30 @@
+{
+  "name": "neconix/yii2-oci8",
+  "description": "An OCI8 connection class for Yii2 based on pdo-via-oci8 package",
+  "type": "library",
+  "keywords": ["yii2", "oracle", "oci8", "database"],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Neconix",
+      "email": "prostoe@gmail.com",
+      "role": "Developer"
+    }
+  ],
+  "support": {
+    "email": "prostoe@gmail.com",
+    "issues": "https://github.com/Neconix/Yii2-Oci8/issues"
+  },
+  "require": {
+    "php" : "^5.5 || ^7.0",
+    "yiisoft/yii2": "*",
+    "yajra/laravel-pdo-via-oci8": "1.*"
+  },
+
+  "autoload": {
+    "psr-4": {
+      "neconix\\yii2oci8\\": "src/"
+    }
+  }
+
+}
