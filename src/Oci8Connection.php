@@ -21,6 +21,18 @@ class Oci8Connection extends Connection
     public $pdoClass = 'Yajra\Pdo\Oci8';
 
     /**
+     * @var string class name for oci schemaMap
+     */
+    public $schemaClass = 'yii\db\oci\Schema';
+
+    /**
+     * @inheritdoc
+     */
+    public function init() {
+        $this->schemaMap['oci'] = $this->schemaClass;
+    }
+
+    /**
      * Creates the PDO instance from Yajra\Pdo\Oci8 component
      * @exception PDOException
      * @return \PDO the pdo instance
