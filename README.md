@@ -1,7 +1,6 @@
 # Yii2-Oci8
-Yii2 extension which uses well written [yajra/pdo-via-oci8](https://github.com/yajra/pdo-via-oci8) 
-for standard PHP Oracle functions (OCI8). There are no "super" pdo classes and wrapers, 
-presented only Yii2 related functionality.
+Yii2 OCI8 extension which uses well written [yajra/pdo-via-oci8](https://github.com/yajra/pdo-via-oci8) 
+with some useful but optional extras. Supported PHP7.
 
 **Supported**
 - Yii 2.x;
@@ -22,7 +21,7 @@ Add to your `composer.json` file:
    ],
    
    "require": {
-     "neconix/yii2-oci8": "@dev"
+     "neconix/yii2-oci8": "1.*"
    }
 ```
 
