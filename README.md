@@ -13,13 +13,6 @@ with some useful but optional extras. Supported PHP7.
 Add to your `composer.json` file:
 
 ```
-  "repositories": [
-     {
-       "type": "vcs",
-       "url": "https://github.com/Neconix/Yii2-Oci8.git"
-     }
-   ],
-   
    "require": {
      "neconix/yii2-oci8": "1.*"
    }
