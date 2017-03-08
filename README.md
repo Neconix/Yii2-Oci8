@@ -20,7 +20,7 @@ Add to your `composer.json` file:
 
 And then run `composer update`.
 
-**Yii2 configuration example for an oracle database**
+**Yii2 configuration example for an Oracle database**
 
 Yii2 configuration:
 
@@ -79,3 +79,25 @@ oci_execute($stmt);
 ...
 //fetching result
 ```
+
+**Caching features**
+
+To enable caching for all tables in a schema add lines below in database connection configuration:
+
+```php
+    ...
+    'cachedSchema' => [
+        'class' => 'neconix\yii2oci8\CachedSchema',
+        // Optional, dafault is current connection schema.
+        'cachingSchemas' => ['HR', 'SCOTT'],
+        // Optional, a callback must return true for a table from the schema 
+        // if it need to be cached
+        'tableNameFilter' => function ($tableName) {
+            //Cache everything but the EMP table from HR and SCOTT schemas
+            return $tableName != 'EMP';
+        }
+    ],
+    ...
+```
+
+Table schemas saves to the default Yii2 cache component.
