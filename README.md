@@ -90,8 +90,7 @@ To enable caching for all tables in a schema add lines below in database connect
         'class' => 'neconix\yii2oci8\CachedSchema',
         // Optional, dafault is current connection schema.
         'cachingSchemas' => ['HR', 'SCOTT'],
-        // Optional, a callback must return true for a table from the schema 
-        // if it need to be cached
+        // Optional. This callback must return true for a table name if it need to be cached.
         'tableNameFilter' => function ($tableName) {
             //Cache everything but the EMP table from HR and SCOTT schemas
             return $tableName != 'EMP';
@@ -101,3 +100,18 @@ To enable caching for all tables in a schema add lines below in database connect
 ```
 
 Table schemas saves to the default Yii2 cache component.
+To build schema cache after the connection is open:
+
+```php
+    'on afterOpen' => function($event) 
+    {
+        $event->sender->createCommand($q)->execute();
+
+        /* @var $schema \neconix\yii2oci8\CachedSchema */
+        $schema = Yii::$app->oraclepdo->getSchema();
+
+        if (!$schema->isCached)
+            //Rebuild schema cache
+            $schema->buildSchemaCache();
+    },
+```
