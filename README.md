@@ -1,6 +1,6 @@
 # Yii2-Oci8
 Yii2 OCI8 extension which uses well written [yajra/pdo-via-oci8](https://github.com/yajra/pdo-via-oci8) 
-with some useful but optional extras. Supported PHP7.
+with optional full table schema caching. Supported PHP7.
 
 **Supported**
 - Yii 2.x;
@@ -48,11 +48,13 @@ return [
     'schemaCacheDuration' => 60 * 60, //1 hour
     'on afterOpen' => function($event) {
 
+    /* A session configuration example */
         $q = <<<SQL
 begin
-  execute immediate 'alter session set NLS_COMP=LINGUISTIC';
   execute immediate 'alter session set NLS_SORT=BINARY_CI';
   execute immediate 'alter session set NLS_TERRITORY=AMERICA';
+  -- ATTENSION: A 'NLS_COMP=LINGUISTIC' option is slow down queries;
+    -- execute immediate 'alter session set NLS_COMP=LINGUISTIC';
 end;
 SQL;
         $event->sender->createCommand($q)->execute();
@@ -82,10 +84,14 @@ oci_execute($stmt);
 
 **Caching features**
 
-To enable caching for all tables in a schema add lines below in database connection configuration:
+To enable caching for all tables in a schema add lines below in a database connection configuration `db.php`:
 
 ```php
     ...
+    //Disabling Yii2 schema cache
+    'enableSchemaCache' => false
+    
+    //Defining a cache schema component
     'cachedSchema' => [
         'class' => 'neconix\yii2oci8\CachedSchema',
         // Optional, dafault is current connection schema.
@@ -100,7 +106,7 @@ To enable caching for all tables in a schema add lines below in database connect
 ```
 
 Table schemas saves to the default Yii2 cache component.
-To build schema cache after the connection is open:
+To build schema cache after a connection opens:
 
 ```php
     'on afterOpen' => function($event) 
@@ -108,7 +114,7 @@ To build schema cache after the connection is open:
         $event->sender->createCommand($q)->execute();
 
         /* @var $schema \neconix\yii2oci8\CachedSchema */
-        $schema = Yii::$app->oraclepdo->getSchema();
+        $schema = $event->sender->getSchema();
 
         if (!$schema->isCached)
             //Rebuild schema cache
