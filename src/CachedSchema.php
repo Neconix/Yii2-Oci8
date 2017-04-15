@@ -39,55 +39,65 @@ class CachedSchema extends \yii\db\oci\Schema
      */
     public $tableNameFilter = null;
 
+    /**
+     * @param TableSchema[] $tableShemas
+     * @return array
+     */
+    private function filterTableSchemas($tableShemas)
+    {
+        $filteredTables = [];
+        //Filter table names if $tableNameFilter is a user callable
+        if (is_callable($this->tableNameFilter)) {
+            foreach ($tableShemas as $tableSchema) {
+                if (call_user_func($this->tableNameFilter, $tableSchema->name, $tableSchema->schemaName))
+                    $filteredTables[] = $tableSchema;
+            }
+        }
+        return $filteredTables;
+    }
+
     protected function composeTableNames()
     {
-        $tableNames = [];
-
+        $tableSchemas = [];
         if (count($this->cachingSchemas) == 0) {
-            $tableNames = $this->tableNames;
+            $tableSchemas = $this->filterTableSchemas($this->getTableSchemas());
         } else {
             //Find tables from given schemas
             foreach ($this->cachingSchemas as $shemaName) {
-                $tableNames = array_merge($tableNames, $this->getTableNames($shemaName));
+                $tableSchemas = $this->getTableSchemas($shemaName);
+                $tableSchemas = array_merge($tableSchemas, $this->filterTableSchemas($tableSchemas));
             }
         }
 
-        //Filter table names if needed
-        if (is_callable($this->tableNameFilter)) {
-            return array_filter($tableNames, $this->tableNameFilter);
-        } else {
-            return $tableNames;
-        }
+        return $tableSchemas;
     }
 
     /**
-     * Build schema cache
+     * Builds schema cache
      */
     public function buildSchemaCache()
     {
         Yii::$app->cache->delete($this->getCacheCreationTimeKey());
 
-        $tableNames = $this->composeTableNames();
+        $tableShemas = $this->composeTableNames();
 
-        foreach ($tableNames as $tableName) {
-            $table = new TableSchema();
-            $this->resolveTableNames($table, $tableName);
+        foreach ($tableShemas as $tableShema) {
+            if ($this->findColumns($tableShema)) {
+                $this->findConstraints($tableShema);
 
-            if ($this->findColumns($table)) {
-                $this->findConstraints($table);
-
-                $key = $this->getTableCacheKey($table);
+                $key = $this->getTableCacheKey($tableShema);
                 Yii::$app->cache->delete($key);
                 $result = Yii::$app->cache->add(
                     $key,
-                    $table,
+                    $tableShema,
                     $this->schemaCacheDuration);
 
                 if (YII_ENV == 'dev' && $result) {
-                    Yii::info("Table \"$tableName\" has been cached", 'cache');
+                    Yii::info("Table \"$tableShema->fullName\" has been cached", 'cache');
                 }
             }
         }
+
         Yii::$app->cache->add($this->getCacheCreationTimeKey(), microtime(true));
     }
 
@@ -101,9 +111,9 @@ class CachedSchema extends \yii\db\oci\Schema
     }
 
     /**
-     * @inheritdoc
+     * Returns table from cache, if found in it, or call [[loadTableSchema()]]
      */
-    public function loadTableSchema($name)
+    private function loadTable($name, $fromCacheOnly = false)
     {
         $table = new TableSchema();
         $this->resolveTableNames($table, $name);
@@ -111,7 +121,23 @@ class CachedSchema extends \yii\db\oci\Schema
         $tablekey = $this->getTableCacheKey($table);
         $tableCached = Yii::$app->cache->get($tablekey);
         if ($tableCached !== false) {
-            return $tableCached;
+            return [$tableCached, true];
+        } else {
+            if ($fromCacheOnly !== true)
+                return [parent::loadTableSchema($name), false];
+            else
+                return [null, false];
+        }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function loadTableSchema($name)
+    {
+        list($table, $fromCache) = $this->loadTable($name);
+        if ($fromCache === true) {
+            return $table;
         } else {
             if (YII_ENV == 'dev')
                 Yii::error("Table \"$name\" schema cache not found. " .
@@ -145,11 +171,17 @@ class CachedSchema extends \yii\db\oci\Schema
 
     public function getAllCachedTables()
     {
-        $tableNames = $this->composeTableNames();
+        $tableShemas = $this->composeTableNames();
         $result = [];
-        foreach ($tableNames as $tableName) {
-            $result[] = $this->loadTableSchema($tableName);
+
+        foreach ($tableShemas as $tableShema) {
+            list($table, $fromCache) = $this->loadTable($tableShema->fullName, true);
+            if ($table !== null) {
+                $result[] = $table;
+            }
         }
+
+
         return $result;
     }
 }

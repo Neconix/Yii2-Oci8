@@ -53,8 +53,6 @@ return [
 begin
   execute immediate 'alter session set NLS_SORT=BINARY_CI';
   execute immediate 'alter session set NLS_TERRITORY=AMERICA';
-  -- ATTENSION: A 'NLS_COMP=LINGUISTIC' option is slow down queries;
-    -- execute immediate 'alter session set NLS_COMP=LINGUISTIC';
 end;
 SQL;
         $event->sender->createCommand($q)->execute();
@@ -94,10 +92,10 @@ To enable caching for all tables in a schema add lines below in a database conne
     //Defining a cache schema component
     'cachedSchema' => [
         'class' => 'neconix\yii2oci8\CachedSchema',
-        // Optional, dafault is current connection schema.
+        // Optional, default is the current connection schema.
         'cachingSchemas' => ['HR', 'SCOTT'],
-        // Optional. This callback must return true for a table name if it need to be cached.
-        'tableNameFilter' => function ($tableName) {
+        // Optional. This callback must return `true` for a table name if it need to be cached.
+        'tableNameFilter' => function ($tableName, $schemaName) {
             //Cache everything but the EMP table from HR and SCOTT schemas
             return $tableName != 'EMP';
         }
