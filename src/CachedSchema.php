@@ -5,7 +5,6 @@
 
 namespace neconix\yii2oci8;
 
-
 use Yii;
 
 use yii\caching\TagDependency;
@@ -26,9 +25,10 @@ class CachedSchema extends \yii\db\oci\Schema
     public $cachingSchemas = [];
 
     /**
-     * @var string Cache dependency tag name
+     * @var string|null Cache unique dependency tag name. Cache data updated and cleared by it's value.
+     * If is `null` then evaluated as username and DSN pair by default.
      */
-    protected $cacheTagName = 'L1TableSchemaCache';
+    public $cacheTagName = null;
 
     /**
      * @var int $schemaCacheDuration the number of seconds in which the cached value will expire. 0 means never expire.
@@ -39,6 +39,13 @@ class CachedSchema extends \yii\db\oci\Schema
      * @var callable|null Function for filtering table names after selected schemas reading but before caching
      */
     public $tableNameFilter = null;
+
+    public function init()
+    {
+        if ($this->cacheTagName === null) {
+            $this->cacheTagName = "[{$this->db->username}],[{$this->db->dsn}]";
+        }
+    }
 
     /**
      * Searching table names in a default schema or in [[cachingSchemas]]
@@ -119,13 +126,7 @@ class CachedSchema extends \yii\db\oci\Schema
             }
         }
 
-        Yii::$app->cache->add(
-            $this->getCacheCreationTimeKey(),
-            microtime(true),
-            $this->schemaCacheDuration,
-            new TagDependency(['tags' => $this->cacheTagName]));
-
-        Yii::$app->cache->add(
+        Yii::$app->cache->set(
             $this->getCacheCreationTimeKey(),
             microtime(true),
             $this->schemaCacheDuration,
@@ -138,15 +139,6 @@ class CachedSchema extends \yii\db\oci\Schema
     public function cleanupCache()
     {
         TagDependency::invalidate(Yii::$app->cache, $this->cacheTagName);
-    }
-
-    /**
-     * Return caching time or false if no schema cache exists
-     * @return false|double
-     */
-    public function getCacheTime()
-    {
-        return Yii::$app->cache->get($this->getCacheCreationTimeKey());
     }
 
     /**
@@ -185,6 +177,27 @@ class CachedSchema extends \yii\db\oci\Schema
         }
     }
 
+    /**
+     * Returns base cache key array
+     * @return array
+     */
+    private function getUserSchemaCacheKey()
+    {
+        return [$this->cacheTagName];
+    }
+
+    private function getCacheCreationTimeKey()
+    {
+        $key = $this->getUserSchemaCacheKey();
+        $key[] = '_SchemaCache_CreationTime';
+        return $key;
+    }
+
+    public function getIsCached()
+    {
+        return Yii::$app->cache->exists($this->getCacheCreationTimeKey());
+    }
+
     private function getTableCacheKey(TableSchema $table)
     {
         $tablekey = $this->getUserSchemaCacheKey();
@@ -193,19 +206,14 @@ class CachedSchema extends \yii\db\oci\Schema
         return $tablekey;
     }
 
-    private function getUserSchemaCacheKey()
+    /**
+     * Return caching time or false if no schema cache exists
+     * @return false|double
+     */
+    public function getCacheTime()
     {
-        return [$this->db->dsn, $this->db->username, $this->cacheTagName];
-    }
-
-    private function getCacheCreationTimeKey()
-    {
-        return [$this->getUserSchemaCacheKey(), $this->cacheTagName, 'CreationTime'];
-    }
-
-    public function getIsCached()
-    {
-        return Yii::$app->cache->exists($this->getCacheCreationTimeKey());
+        $v = Yii::$app->cache->get($this->getCacheCreationTimeKey());
+        return $v;
     }
 
     public function getAllCachedTables()
@@ -219,7 +227,6 @@ class CachedSchema extends \yii\db\oci\Schema
                 $result[] = $table;
             }
         }
-
 
         return $result;
     }
