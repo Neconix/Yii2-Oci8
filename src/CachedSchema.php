@@ -117,7 +117,7 @@ class CachedSchema extends \yii\db\oci\Schema
                     new TagDependency(['tags' => $this->cacheTagName])
                 );
 
-                if (YII_ENV == 'dev') {
+                if (YII_ENV_DEV) {
                     if ($result === true)
                         Yii::info("Table \"$tableSchema->fullName\" has been cached", 'Schema cache');
                     else
@@ -170,7 +170,7 @@ class CachedSchema extends \yii\db\oci\Schema
         if ($fromCache === true) {
             return $table;
         } else {
-            if (YII_ENV == 'dev')
+            if (YII_ENV_DEV)
                 Yii::error("Table \"$name\" not found in schema cache. " .
                     "You must rebuild schema cache, see Schema::buildSchemaCache().", 'Schema::loadTableSchema()');
             return parent::loadTableSchema($name);
